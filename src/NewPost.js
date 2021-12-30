@@ -16,7 +16,7 @@ export const NewPost = ({ createPost }) => {
           type="text"
           name="title"
           id="title"
-          defaultValue={title}
+          value={title}
           onChange={(e) => {
             setTitle(e.target.value)
           }}
@@ -27,7 +27,7 @@ export const NewPost = ({ createPost }) => {
           type="text"
           name="body"
           id="body"
-          defaultValue={body}
+          value={body}
           onChange={(e) => {
             setBody(e.target.value)
           }}

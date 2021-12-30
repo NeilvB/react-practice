@@ -27,7 +27,7 @@ export const EditPost = ({ posts, updatePost }) => {
           type="text"
           name="title"
           id="postTitle"
-          defaultValue={title}
+          value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
@@ -39,7 +39,7 @@ export const EditPost = ({ posts, updatePost }) => {
           id="postBody"
           cols="30"
           rows="10"
-          defaultValue={body}
+          value={body}
           onChange={(e) => setBody(e.target.value)}
         ></textarea>
       </div>
