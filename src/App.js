@@ -10,7 +10,7 @@ import {
 import './App.css'
 import { PropTypes } from 'prop-types'
 
-const PostIndex = ({ posts, deletePost }) => {
+const PostIndex = ({ posts, deletePost, resetAllPosts }) => {
   return (
     <>
       <ol>
@@ -29,8 +29,14 @@ const PostIndex = ({ posts, deletePost }) => {
       </ol>
 
       <Link to="/posts/new">New Post</Link>
-
-      <Link to="/posts/confirm">Next</Link>
+      <Link to="/posts/review">Next</Link>
+      <input
+        type="button"
+        value="Reset all posts"
+        onClick={() => {
+          resetAllPosts()
+        }}
+      />
     </>
   )
 }
@@ -38,6 +44,7 @@ const PostIndex = ({ posts, deletePost }) => {
 PostIndex.propTypes = {
   posts: PropTypes.array,
   deletePost: PropTypes.func,
+  resetAllPosts: PropTypes.func,
 }
 
 const EditPost = ({ posts, updatePost }) => {
@@ -158,7 +165,9 @@ NewPost.propTypes = {
   createPost: PropTypes.func,
 }
 
-const ConfirmPosts = ({ posts, confirmPosts }) => {
+const ReviewPosts = ({ posts, confirmPosts }) => {
+  const navigate = useNavigate()
+
   return (
     <div>
       <h1>Posts</h1>
@@ -173,9 +182,12 @@ const ConfirmPosts = ({ posts, confirmPosts }) => {
         <input
           type="submit"
           value="Confirm"
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault()
-            confirmPosts()
+
+            await confirmPosts()
+
+            navigate('/posts')
           }}
         />
       </form>
@@ -183,25 +195,70 @@ const ConfirmPosts = ({ posts, confirmPosts }) => {
   )
 }
 
-ConfirmPosts.propTypes = {
+ReviewPosts.propTypes = {
   posts: PropTypes.array,
   confirmPosts: PropTypes.func,
+}
+
+const PostsConfirmation = ({ posts }) => {
+  return (
+    <>
+      <h1>{posts.length} posts created</h1>
+
+      <Link to="/posts"></Link>
+    </>
+  )
+}
+
+PostsConfirmation.propTypes = {
+  posts: PropTypes.array,
 }
 
 const App = () => {
   const [posts, setPosts] = useState([])
 
-  useEffect(() => {
-    const getPosts = async () => {
-      const response = await fetch('https://jsonplaceholder.typicode.com/posts')
-      const json = await response.json()
+  const readPostsFromCache = () => {
+    const storedPosts = window.localStorage.getItem('posts')
 
-      const posts = json.slice(0, 3)
-
-      setPosts(posts)
+    if (!storedPosts) {
+      return false
     }
 
-    getPosts()
+    setPosts(JSON.parse(storedPosts))
+    return true
+  }
+
+  const clearAndRefreshPosts = async () => {
+    window.localStorage.removeItem('posts')
+    await getPosts()
+  }
+
+  // Write posts to local storage whenever posts changes
+  // Means the user can leave / refresh the app without losing progress
+  useEffect(() => {
+    const storePostsInCache = () => {
+      window.localStorage.setItem('posts', JSON.stringify(posts))
+    }
+
+    if (posts.length > 0) {
+      storePostsInCache()
+    }
+  }, [posts])
+
+  const getPosts = async () => {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts')
+    const json = await response.json()
+
+    const posts = json.slice(0, 3)
+
+    setPosts(posts)
+  }
+
+  useEffect(() => {
+    // Only fetch posts from the API if there are none cached
+    if (!readPostsFromCache()) {
+      getPosts()
+    }
   }, [])
 
   const updatePost = (postId, updatedPost) => {
@@ -220,7 +277,7 @@ const App = () => {
     const { title, body } = post
 
     setPosts((posts) => {
-      return posts.concat({ id: posts.length + 1, title, body })
+      return posts.concat({ id: posts[posts.length - 1].id + 1, title, body })
     })
   }
 
@@ -233,10 +290,16 @@ const App = () => {
     ])
   }
 
-  const confirmPosts = () => {
-    console.log('Confirming posts')
+  const confirmPosts = async () => {
+    await fetch('https://jsonplaceholder.typicode.com/posts', {
+      method: 'POST',
+      body: JSON.stringify(posts),
+      headers: {
+        'Content-type': 'application/json; charset=UTF-8',
+      },
+    })
 
-    console.table(posts)
+    await clearAndRefreshPosts()
   }
 
   return (
@@ -247,22 +310,38 @@ const App = () => {
             <Route
               exact
               path="/posts"
-              element={<PostIndex posts={posts} deletePost={deletePost} />}
-            ></Route>
+              element={
+                <PostIndex
+                  posts={posts}
+                  deletePost={deletePost}
+                  resetAllPosts={() => {
+                    clearAndRefreshPosts()
+                  }}
+                />
+              }
+            />
+
             <Route
               path="/posts/:postId/edit"
               element={<EditPost posts={posts} updatePost={updatePost} />}
-            ></Route>
+            />
+
             <Route
               path="/posts/new"
               element={<NewPost createPost={createPost} />}
-            ></Route>
+            />
+
             <Route
-              path="/posts/confirm"
+              path="/posts/review"
               element={
-                <ConfirmPosts posts={posts} confirmPosts={confirmPosts} />
+                <ReviewPosts posts={posts} confirmPosts={confirmPosts} />
               }
-            ></Route>
+            />
+
+            <Route
+              path="/posts/confirmation"
+              element={<PostsConfirmation posts={posts} />}
+            />
           </Routes>
         }
       </div>
