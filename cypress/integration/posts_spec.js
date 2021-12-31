@@ -19,33 +19,7 @@ describe('posts', () => {
     })
   })
 
-  it('caches the first API response in local storage for subsequent loads', () => {
-    cy.url().should('include', '/posts', () => {
-      expect(window.localStorage.getItem('posts')).toEqual(
-        JSON.stringify([
-          { id: 1, body: 'body1', title: 'title1' },
-          { id: 2, body: 'body2', title: 'title2' },
-          { id: 3, body: 'body3', title: 'title3' },
-        ])
-      )
-
-      // Artificially set local storage
-      window.localStorage.setItem(
-        'posts',
-        JSON.stringify([{ id: 1, body: 'newBody1', title: 'newTitle1' }])
-      )
-    })
-
-    cy.reload()
-
-    cy.url().should('include', '/posts', () => {
-      expect(window.localStorage.getItem('posts')).toEqual(
-        JSON.stringify([{ id: 1, body: 'newBody1', title: 'newTitle1' }])
-      )
-    })
-  })
-
-  it.only('allows additions, updates, deletions, reviews and confirmations of posts', () => {
+  it('allows additions, updates, deletions, reviews and confirmations of posts', () => {
     cy.contains('a', 'New Post').click()
 
     cy.get('form').within(() => {
@@ -119,5 +93,31 @@ describe('posts', () => {
     // to have updated the posts. Adding a stubbed response here
     // does nothing to test our frontend.
     cy.url().should('contain', '/posts')
+  })
+
+  it('caches edited posts locally to use for subsequent loads', () => {
+    cy.get('[data-testid="posts-list"]').within(() => {
+      cy.contains('li:nth-child(3)', 'title3').within(() => {
+        cy.get('input').should('have.value', 'Delete').click()
+      })
+
+      cy.contains('li:nth-child(2)', 'title2').within(() => {
+        cy.get('input').should('have.value', 'Delete').click()
+      })
+
+      cy.contains('li:nth-child(1)', 'title1').contains('Edit').click()
+    })
+
+    cy.get('form').within(() => {
+      cy.get('[name="title"]').clear().type('New post title - edited')
+
+      cy.contains('Update Post').click()
+    })
+
+    cy.reload()
+
+    cy.get('[data-testid="posts-list"]').within(() => {
+      cy.contains('li:nth-child(1)', 'New post title - edited')
+    })
   })
 })
