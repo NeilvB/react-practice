@@ -1,70 +1,55 @@
-# Getting Started with Create React App
+## Practice project - "posts"
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### Running
 
-## Available Scripts
+`yarn`
 
-In the project directory, you can run:
+`yarn start`
 
-### `yarn start`
+### Tests
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+In one terminal
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+`yarn start`
 
-### `yarn test`
+In another terminal
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+`yarn run cypress open`
 
-### `yarn build`
+### Goal
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Create a multi-page React app which allows creation, edits, and deletions of a set of resources. The initial set of resources is fetched from an API. A final review and confirm step results in a POST of all data to the server. Write integration tests in Cypress.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Rationale
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+This journey of making resource updates in dedicated pages followed by a confirmation step is roughly analagous that for operatives in Repairs Hub managing tasks. We know we will be implementing more multi-page journeys for this application, so this should be good practice. The main way that this differs is that all of the individual updates are stored in state (and local storage) until the final step when everything is POST-ed to the server.
 
-### `yarn eject`
+### Implementation
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Uses create-react-app. Uses react-router to manage page transitions. API calls are made to jsonplaceholder.com using the fetch API. State is mirrored to local storage because otherwise a page refresh will lose the user's edits.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Components, state, props and local storage
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+A top-level App contains the most important state - 'posts' which is an array of post objects.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+On initially loading the posts page, this state is populated from an API response, from a useEffect hook. There is another useEffect hook which runs whenever 'posts' changes, which immediately mirrors that array's state in local storage. Subsequent page loads do NOT make an API call. The local storage is used instead.
 
-## Learn More
+The new and delete actions are straightforward and make calls to functions made in the App.js component to append or remove elements from the 'posts' array.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+The EditPosts componen receives the 'postId' parameter via the useParams hook from react-router and then uses that to search through all of the posts which are supplied to it as a prop. Perhaps a cleaner way to do this would be to supply a 'searchPostsById' function or similar from the parent App component. Either way, this approach means we do not ever need to make a GET request to the /posts endpoint after the first page load of the app.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The ReviewPost page lists the posts and lets the user confirm all of the updates made up to this point. There is no error check on the API request. The user is redirected back to the list of posts after this confirmation and the local storage is cleared. Normally we would of course expect the changes to be made on the server and the homepage at this point to show all updates made to the posts but as we're using a placeholder that's not possible.
 
-### Code Splitting
+### Extensions / Limitations / Questions
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+No error handling for the fetch requests.
+Consider using IndexedDB instead of LocalStorage?
+Styling is intentionally left
+No validation on inputs e.g. empty titles are allowed but probably shouldn't be
+How does the use of react-router translate to Next JS? Does that framework support another way? Could this app be implemented using Next JS routes?
+Could be extended in many ways for practice
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- add an extra confirmation (are you sure?) step
+- Add a Duplicate post button
+- Styling
+- Introduce multiple users who see their own posts (note the placeholder response includes userIds)
