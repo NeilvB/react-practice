@@ -42,7 +42,6 @@ const App = () => {
   const getPosts = async () => {
     const response = await fetch('https://jsonplaceholder.typicode.com/posts')
     const json = await response.json()
-
     const posts = json.slice(0, 3)
 
     setPosts(posts)

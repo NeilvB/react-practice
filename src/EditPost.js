@@ -22,21 +22,21 @@ export const EditPost = ({ posts, updatePost }) => {
   return (
     <form>
       <div>
-        <label htmlFor="postTitle">Title</label>
+        <label htmlFor="title">Title</label>
         <input
           type="text"
           name="title"
-          id="postTitle"
+          id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
 
       <div>
-        <label htmlFor="postBody">Body</label>]
+        <label htmlFor="body">Body</label>]
         <textarea
-          name="postBody"
-          id="postBody"
+          name="body"
+          id="body"
           cols="30"
           rows="10"
           value={body}

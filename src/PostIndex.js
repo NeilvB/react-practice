@@ -4,7 +4,7 @@ import { PropTypes } from 'prop-types'
 export const PostIndex = ({ posts, deletePost, resetAllPosts }) => {
   return (
     <>
-      <ol>
+      <ol data-testid="posts-list">
         {posts.map((post, index) => (
           <li key={index}>
             {post.title} <Link to={`/posts/${post.id}/edit`}>Edit</Link>{' '}
